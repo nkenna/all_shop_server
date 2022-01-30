@@ -435,6 +435,12 @@ exports.adminAddBusiness = (req, res) => {
                 return res.status(404).send(result);
             }
 
+            if(plaza.location == null){
+                result.status = "failed";
+                result.message = "plaza location required";
+                return res.status(403).send(result);
+            }
+
             // find Category
             Category.findOne({_id: categoryId})
             .then(category => {
