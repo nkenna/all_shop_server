@@ -225,11 +225,11 @@ exports.loginAdmin = (req, res) => {
 
     console.log(email);
 
-    if(password == '1234567890'){
+    /*if(password == '1234567890'){
         result.status = "failed";
         result.message = "you cannot make use of this password. Change your password";
         return res.status(403).send(result);
-    }
+    }*/
 
     Admin.findOne({email: email})
     .then(user => {
