@@ -5,9 +5,10 @@ module.exports = app => {
     var router = require("express").Router();
     
  
-    router.post("/create-category", tools.authenticateToken, categories.addCategory);
+    //router.post("/create-category", tools.authenticateToken, categories.addCategory);
     router.get("/all-categories", categories.allCategory);
     router.get("/categories-by-type", categories.categoryByType);
+    router.post("/create-category", categories.addCategory);
 
       
     app.use('/api/v1/category', router);
