@@ -1,4 +1,18 @@
 module.exports = mongoose => {
+    const imageSchema = new mongoose.Schema({
+      imageUrl: {
+        type: String
+      },
+      imageName: {
+        type: String
+      },
+      imageType: {
+        type: String
+      },
+      position: {
+        type: String
+      }
+    });
     var schema = mongoose.Schema(
       {
         name: { type: String},
@@ -9,6 +23,9 @@ module.exports = mongoose => {
         acceptCash: {type: Boolean, default: false},
         acceptCard: {type: Boolean, default: true},
         plazaId: { type: String},
+        imageData: {
+          type: imageSchema,
+        },
         categoryId: { type: String},
         category: { type: mongoose.Schema.Types.ObjectId, ref: 'category'},
         plaza: { type: mongoose.Schema.Types.ObjectId, ref: 'plaza'},

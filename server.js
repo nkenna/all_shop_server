@@ -13,12 +13,14 @@ const app = express();
 
 app.use(cors());
 app.options('*', cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload({
   useTempFiles : true,
   debug: true
 }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
 
 var filesFolderAvatar = path.join(process.cwd(), 'media/images/avatars');
 var filesFolderPlaza = path.join(process.cwd(), 'media/images/plaza');

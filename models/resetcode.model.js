@@ -4,7 +4,6 @@ module.exports = mongoose => {
         code: { type: String},
         email: { type: String},
         userId: {type: String},
-        serviceId: {type: String},
         used: { type: Boolean, default: false },
       },
       {timestamps: true}

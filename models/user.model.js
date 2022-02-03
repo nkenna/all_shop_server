@@ -7,6 +7,8 @@ module.exports = mongoose => {
         email: { type: String},
         password: { type: String},
         avatar: { type: String },
+        walletId: {type: String},
+        wallet: { type: mongoose.Schema.Types.ObjectId, ref: 'wallet'},
         status: { type: Boolean, default: true }, //activate and deactivate user
         emailNotif: { type: Boolean, default: true }, // true: user recieves email notification
         verified: { type: Boolean, default: true }

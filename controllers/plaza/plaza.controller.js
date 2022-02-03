@@ -3,6 +3,8 @@ const User = db.users;
 const Wallet = db.wallets;
 const Plaza = db.plazas;
 const Location = db.locations;
+const Business = db.businesses;
+const Product = db.products;
 const os = require('os');
 var fs = require('fs');
 const path = require("path");
@@ -232,6 +234,7 @@ exports.getAPlaza = (req, res) => {
 
 exports.homePlazaData = (req, res) => {
     var result = {};
+    const now = moment(new Date());
 
     var lat = req.query.lat;
     var lng = req.query.lng;
@@ -250,11 +253,26 @@ exports.homePlazaData = (req, res) => {
     .select("-country -state -city -address -landmark -type -user -userId")
     .populate("plaza")
     .then(locations => {
-        console.log(locations);
-        result.status = "success";
-        result.message = "locations found";
-        result.locations = locations;
-        return res.status(200).send(result); 
+        // attach recent added stores
+        Business.find({createdAt: {
+            $gte: moment(now).subtract(90, 'days').toDate(),
+            $lte: now.toDate()
+        }})
+        .sort('-updatedAt')
+        .then(business => {
+            console.log(locations);
+            result.status = "success";
+            result.message = "locations found";
+            result.locations = locations;
+            result.business = business;
+            return res.status(200).send(result); 
+        })
+        .catch(err => {
+            console.log(err);
+            result.status = "failed";
+            result.message = "error occurred recent stores";
+            return res.status(500).send(result);
+        });
     })
     .catch(err => {
         console.log(err);

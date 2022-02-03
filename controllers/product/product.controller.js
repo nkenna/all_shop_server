@@ -453,6 +453,7 @@ exports.starUnstarProduct = (req, res) => {
                 userId: userId,
                 product: product._id,
                 user: userId,
+                starred: starred
             });
 
             sProduct.save(sProduct)
@@ -518,6 +519,41 @@ exports.starUnstarProduct = (req, res) => {
         console.log(err);
         result.status = "failed";
         result.message = "error occurred finding product";
+        return res.status(500).send(result);
+    });
+}
+
+exports.starredProductsByUser = (req, res) => {
+    var result = {};
+
+    var userId = req.query.userId;
+
+    StarredProduct.find({userId: userId})
+    .populate({ 
+        path: 'product',
+        populate: {
+          path: 'business',
+          model: 'business',
+        },
+        
+     })
+     .populate({ 
+        path: 'user',
+        populate: {
+          path: 'user',
+          model: 'user'
+        } 
+     })
+    .then(products => {
+        result.status = "success";
+        result.message = "starred products found";
+        result.products = products;
+        return res.status(200).send(result);
+    })
+    .catch(err => {
+        console.log(err);
+        result.status = "failed";
+        result.message = "error occurred finding starred products";
         return res.status(500).send(result);
     });
 }

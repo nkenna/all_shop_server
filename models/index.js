@@ -17,6 +17,7 @@ db.services = require('./service.model')(mongoose);
 db.contacts = require('./contact.model')(mongoose);
 db.products = require('./product.model')(mongoose);
 db.messages = require('./message.model')(mongoose);
+db.devices = require('./device.model')(mongoose);
 db.starredProducts = require('./starred.product.model')(mongoose);
 
 //db.admins = require('./admin.model')(mongoose);

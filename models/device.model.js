@@ -1,14 +1,15 @@
 module.exports = mongoose => {
     var schema = mongoose.Schema(
       {
-        productId: { type: String},
-        userId: { type: String},
-        starred: { type: Boolean, required: true},
-        product: { type: mongoose.Schema.Types.ObjectId, ref: 'product'},
+        token: { type: String, default: "" },
+        deviceModel: { type: String, default: "" },
+        os: { type: String, default: "" },
+        userId: { type: String, default: "" },
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'user'},
       },
       {timestamps: true}
-    );       
+    );   
+
     
     schema.method("toJSON", function() {
       const { __v, _id, ...object } = this.toObject();
@@ -16,6 +17,6 @@ module.exports = mongoose => {
       return object;
     });
   
-    const StarredProduct = mongoose.model("starredproduct", schema);
-    return StarredProduct;
+    const Device = mongoose.model("device", schema);
+    return Device;
   };

@@ -18,6 +18,7 @@ module.exports = app => {
     router.get("/admin-all-plazas", adminOps.adminAllPlaza); 
     router.post("/admin-create-plaza", adminOps.addPlaza); 
     router.post("/admin-edit-plaza-location", adminOps.adminEditPlazaLocation); 
+    router.post("/admin-add-plaza-image", adminOps.adminAddPlazaImage); 
 
     router.post("/admin-add-business", adminOps.adminAddBusiness); 
     router.get("/admin-all-business", adminOps.adminAllBusiness); 

@@ -27,7 +27,7 @@ sendEmail: async(reciever, subject, text) => {
 
         const msg = {
         to: reciever, // Change to your recipient
-        from: "hello@dakowa.com", // Change to your verified sender
+        from: "hello@allshopssp.com", // Change to your verified sender
         subject: subject,
         //text: text,
         html: text,
@@ -67,7 +67,6 @@ sendEmailToMany: async(recievers, subject, text) => {
 
 },
 
-
 sendEmailWithAttachment: async(reciever, subject, text, attachment) => {
     
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -98,7 +97,6 @@ sendEmailWithAttachment: async(reciever, subject, text, attachment) => {
     })
 
 },
-
 
 authenticateToken: (req, res, next) => {
     var result = {};
@@ -217,7 +215,7 @@ pushMessageToDevice: (deviceToken, title, body) => {
 
     var admin = require("firebase-admin");
 
-    var serviceAccount = require("./dakowa-de6e0-firebase-adminsdk.json");
+    var serviceAccount = require("./allshop-dfa73-firebase-adminsdk-il79u-d071b32f0d.json");
 
     if (!admin.apps.length) {
         admin.initializeApp({
@@ -246,11 +244,45 @@ pushMessageToDevice: (deviceToken, title, body) => {
 
 },
 
+pushMessageToDeviceWithData: (deviceToken, title, body, data) => {
+
+    var admin = require("firebase-admin");
+
+    var serviceAccount = require("./allshop-dfa73-firebase-adminsdk-il79u-d071b32f0d.json");
+
+    if (!admin.apps.length) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+     }
+    var payload = {
+        notification: {
+          title: title,
+          body: body
+        },
+        data: data
+      };
+      
+       var options = {
+        priority: "high",
+        timeToLive: 60 * 60 *24
+      };
+
+      admin.messaging().sendToDevice(deviceToken, payload, options)
+        .then(function(response) {
+            console.log("Successfully sent message:", response);
+        })
+        .catch(function(error) {
+            console.log("Error sending message:", error);
+        });
+
+},
+
 pushMessageToTopic: (topic, title, body) => {
 
     var admin = require("firebase-admin");
 
-    var serviceAccount = require("./dakowa-de6e0-firebase-adminsdk.json");
+    var serviceAccount = require("./allshop-dfa73-firebase-adminsdk-il79u-d071b32f0d.json");
 
     if (!admin.apps.length) {
         admin.initializeApp({
@@ -278,6 +310,42 @@ pushMessageToTopic: (topic, title, body) => {
         });
 
 },
+
+pushMessageToTopicWithData: (topic, title, body, data) => {
+
+    var admin = require("firebase-admin");
+
+    var serviceAccount = require("./allshop-dfa73-firebase-adminsdk-il79u-d071b32f0d.json");
+
+    if (!admin.apps.length) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+     }
+
+    var payload = {
+        notification: {
+          title: title,
+          body: body
+        },
+        data: data
+      };      
+       var options = {
+        priority: "high",
+        timeToLive: 60 * 60 *24
+      };
+
+      admin.messaging().sendToTopic(topic, payload, options)
+        .then(function(response) {
+            console.log("Successfully sent message:", response);
+        })
+        .catch(function(error) {
+            console.log("Error sending message:", error);
+        });
+
+},
+
+
 
 calculateDashCommission: (amount, percent) => {
      // commission is usually 10%

@@ -6,6 +6,7 @@ const Location = db.locations;
 const Category = db.categories;
 const Business = db.businesses;
 const Product = db.products;
+const Device = db.devices;
 const Wallet = db.wallets;
 const VerifyCode = db.verifycodes;
 const ResetCode = db.resetcodes;
@@ -99,6 +100,16 @@ exports.adminFlagUnFlafUser = (req, res) => {
             user.status = status;
             User.updateOne({_id: user._id}, user)
             .then(data => {
+                // send push notication to user device
+                Device.findOne({userId: user._id})
+                .then(device => {
+                    if(device){
+                        // device was found. create message
+                        var msg = status == false ? "Your account have been flagged. Contact support for assistance." : "Your account have been unflagged successfully. You can now enjoy AllShop Platform.";
+                        tools.pushMessageToDevice(device.token, "IMPORTANT MESSAGE", msg);
+                    }
+                })
+                .catch(err => console.log("erroring finding user device: " + err));
                 result.status = "success";
                 result.message = status == false ? "user flagged successfully" : "user unflagged successfully";
                 return res.status(200).send(result); 
@@ -253,6 +264,16 @@ exports.addPlaza = (req, res) => {
 
         plaza.save(plaza)
         .then(newPlaza => {
+            // send push notication to user device
+            Device.findOne({userId: user._id})
+            .then(device => {
+                if(device){
+                    // device was found. create message
+                    var msg = status == false ? "Your account have been flagged. Contact support for assistance." : "Your account have been unflagged successfully. You can now enjoy AllShop Platform.";
+                    tools.pushMessageToDevice(device.token, "IMPORTANT MESSAGE", msg);
+                }
+            })
+            .catch(err => console.log("erroring finding user device: " + err));
             result.status = "success";
             result.message = "new plaza created successfully";
             result.plaza = newPlaza;
@@ -408,6 +429,116 @@ exports.adminEditPlazaLocation = (req, res) => {
     });
 }
 
+exports.adminAddPlazaImage = (req, res) => {
+    var result = {};
+    console.log(req.files);
+    console.log(req);
+
+   
+    let uploadPath;
+    var adminId = req.body.adminId;
+    var plazaId = req.body.plazaId;
+    var avatar = req.files.avatar; 
+    
+
+    if (!req.files || Object.keys(req.files).length === 0) {
+        result.status = "failed";
+        result.message = "image fields cannot be empty";
+        return res.status(400).send(result);
+    }
+
+
+    Admin.findOne({_id: adminId})
+    .then(admin => {
+        if(!admin){
+            result.status = "failed";
+            result.message = "admin not found";
+            return res.status(404).send(result);
+        }
+
+        Plaza.findOne({_id: plazaId})
+        .then(plaza => {
+            if(!plaza){
+                result.status = "failed";
+                result.message = "plaza not found";
+                return res.status(404).send(result);
+            }
+
+            uploadPath = path.join(process.cwd(), '/media/images/plaza/' +  avatar.name); //__dirname + '/images/avatars/' + avatar.name;
+            console.log(avatar.mimetype);
+            console.log(process.cwd()); 
+
+            // Use the mv() method to place the file somewhere on your server
+            avatar.mv(uploadPath, function(err) {
+                if (err){
+                    result.status = "failed";
+                    result.message = "error moving file: " + err;
+                    return res.status(500).send(result);
+                }
+
+                // create filename
+                var newName = '';
+                if(avatar.mimetype == 'image/jpeg'){
+                    newName = plaza._id + '.jpg';
+                }else if(avatar.mimetype == 'image/png'){
+                    newName = plaza._id + '.png';
+                }else if (avatar.mimetype == 'image/gif') {
+                    newName = plaza._id + '.gif';
+                }else {
+                    newName = plaza._id + '.png';
+                }
+                
+                // we need to rename here   
+                var newPath = path.join(process.cwd(), '/media/images/plaza/' + newName);  
+                fs.rename(uploadPath, newPath, function(err) {
+                    if (err) {
+                        result.status = "failed";
+                        result.message = "avatar upload not successful: " + err;
+                        return res.status(500).send(result);
+                    }
+                    console.log("Successfully renamed the avatar!");
+
+                    // update product avatar field
+                    var imageData = {
+                        imageUrl: "media-plaza/" + newName,
+                        imageName: newName,
+                        imageType: avatar.mimetype,
+                        
+                    };
+
+                    
+                    plaza.images.push(imageData);
+                    Plaza.updateOne({_id: plaza._id}, plaza)
+                    .then(data => {
+                        result.status = "success";
+                        result.message = "avatar uploaded successful";
+                        return res.status(200).send(result);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        result.status = "failed";
+                        result.message = "error occurred uploading avatar";
+                        return res.status(500).send(result);
+                    });
+                    
+                });
+
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            result.status = "failed";
+            result.message = "error occurred finding plaza";
+            return res.status(500).send(result);
+        });  
+    })
+    .catch(err => {
+        console.log(err);
+        result.status = "failed";
+        result.message = "error occurred finding admin";
+        return res.status(500).send(result);
+    });  
+}
 
 exports.adminAddBusiness = (req, res) => {
     var result = {};

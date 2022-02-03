@@ -3,6 +3,9 @@ const User = db.users;
 const Wallet = db.wallets;
 const VerifyCode = db.verifycodes;
 const ResetCode = db.resetcodes;
+const Device = db.devices;
+const Business = db.businesses;
+const Product = db.products;
 const os = require('os');
 var fs = require('fs');
 const path = require("path");
@@ -562,76 +565,64 @@ exports.editAvatar = (req, res) => {
     });  
 }
 
-exports.sendResetCode = (req, res) => {
+exports.sendResetEmail = (req, res) => {
     var result = {};
-    var phone = req.body.phone;
+    var email = req.body.email;
 
-    if(!phone){
+    if(!email){
         result.status = "failed";
         result.message = "email is required";
         return res.status(400).send(result);
     }
 
-    User.findOne({phone: phone})
+    User.findOne({email: email})
     .then(user => {
         if(!user){
             result.status = "failed";
-            result.message = "user not found";
+            result.message = "this email is not attached to any account";
             return res.status(404).send(result);
         }
 
-        const client = new twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-                
-        client.verify.services.create({
-            friendlyName: 'dash reset',
-            codeLength: 6
-        })
-        .then(service => {
-            console.log(service.sid); 
-                client.verify.services(service.sid)
-                    .verifications
-                    .create({to: phone, channel: 'sms'})
-                    .then(verification => {
-                        console.log(verification.status);                                    
-                        
-                        var rcode = new ResetCode({
-                            serviceId: service.sid,
-                            //code: cryptoRandomString({length: 6, type: 'alphanumeric'}),
-                            email: user.email,
-                            userId: user._id
-                        });
-        
-                        rcode.save(rcode)
-                        .then(vc => {
-                            console.log("done creating reset code");
-                        
-                        })
-                        .catch(err => console.log("error creating reset code")); 
+        var code = cryptoRandomString({length: 8, type: 'alphanumeric'})
 
-                        result.status = "success";
-                        result.message = "reset code have been sent through sms";
-                        return res.status(200).send(result);
-                        
 
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        result.status = "failed";
-                        result.message = "error occurred sending reset code: " + err.message;
-                        return res.status(500).send(result);
-                    });                  
-                
-                    
+        // save code
+        var rcode = new ResetCode({
+            code: code,
+            email: user.email,
+            userId: user._id
+        });
+
+        rcode.save(rcode)
+        .then(rc => {
+            console.log("done creating verification code");
+            var emailtext = "<p>You requested to reset your password. If you did not make this request, please contact support and change your password. If not, copy and paste this code on the required field: " +
+            rc.code + "</p>" +
+            "<p>AllShop Team</p>";
+            
+            tools.sendEmail(
+                user.email,
+                "Reset Account password",
+                emailtext
+            );
+
+            result.status = "success";
+            result.message = "user reset password email sent";
+            return res.status(200).send(result);
         })
         .catch(err => {
             console.log(err);
             result.status = "failed";
-            result.message = "error occurred initializing sms service: " + err.message;
+            result.message = "error occurred saving reset code data";
             return res.status(500).send(result);
-        }); 
-
-             
+        });    
        
+    })
+    .catch(err => {
+        console.log(err);
+        result.status = "failed";
+        result.message = "error occurred finding user";
+        return res.status(500).send(result);
     });
 }
 
@@ -640,10 +631,8 @@ exports.resetPassword = (req, res) => {
 
     var code = req.body.code;
     var password = req.body.password;
-    var userId = req.body.userId;
 
-
-   ResetCode.findOne({userId: userId})
+   ResetCode.findOne({code: code})
    .then(rcode => {
     if(!rcode){
         result.status = "failed";
@@ -651,7 +640,7 @@ exports.resetPassword = (req, res) => {
         return res.status(400).send(result);
     }
 
-    User.findOne({_id: userId})
+    User.findOne({_id: rcode.userId})
     .then(user => {
         if(!user){
             result.status = "failed";
@@ -659,54 +648,28 @@ exports.resetPassword = (req, res) => {
             return res.status(404).send(result);
         }
 
-        const client = new twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        bcrypt.hash(password, saltRounds, (err, hashed) => {
+            if(err){
+                result.status = "failed";
+                result.message = "unknown error occurred - password hash failed";
+                return res.status(500).send(result);
+            }
 
-            client.verify.services(vc.serviceId)
-            .verificationChecks
-            .create({to: phone, code: code})
-            .then(verification_check => {
-                console.log(verification_check.status);
-
-                if(verification_check.status == "approved" && verification_check.valid == true){
-                    // provided code is valid
-
-                    bcrypt.hash(password, saltRounds, (err, hashed) => {
-                        if(err){
-                            result.status = "failed";
-                            result.message = "unknown error occurred - password hash failed";
-                            return res.status(500).send(result);
-                        }
-            
-                        user.password = hashed;
-                        User.updateOne({_id: user._id}, user)
-                        .then(data => {
-                            result.status = "success";
-                            result.message = "password reset was successful. Procees to login";
-                            return res.status(200).send(result);
-                        })
-                        .catch(err => {
-                            console.log(err);
-                            result.status = "failed";
-                            result.message = "error occurred resetting password";
-                            return res.status(500).send(result);
-                        });
-            
-                    });
-
-                }else{
-                    result.status = "failed";
-                    result.message = "user account verification failed. invalid code.";
-                    return res.status(417).send(result);
-                }
+            user.password = hashed;
+            User.updateOne({_id: user._id}, user)
+            .then(data => {
+                result.status = "success";
+                result.message = "password reset was successful. Procees to login";
+                return res.status(200).send(result);
             })
             .catch(err => {
                 console.log(err);
                 result.status = "failed";
-                result.message = "error occurred verifying user";
+                result.message = "error occurred resetting password";
                 return res.status(500).send(result);
             });
 
-        
+        });
     }).catch(err => {
         console.log(err);
         result.status = "failed";
@@ -725,6 +688,7 @@ exports.resetPassword = (req, res) => {
 
     
 }
+
 
 exports.editUserLocation = (req, res) => {
     var result = {};
@@ -818,4 +782,117 @@ exports.editUserLocation = (req, res) => {
     });
 }
 
+exports.addUpdateDevice = (req, res) => {
+    var result = {};
 
+    var token = req.body.token;
+    var deviceModel = req.body.deviceModel;
+    var os = req.body.os;
+    var userId = req.body.userId;
+
+    if(!token){
+        result.status = "failed";
+        result.message = "device token is required";
+        return res.status(400).send(result) 
+    }
+
+    User.findOne({_id: userId})
+    .then(user => {
+        if(!user){
+            result.status = "failed";
+            result.message = "user not found";
+            return res.status(404).send(result);
+        }
+
+        Device.findOne({userId: userId})
+        .then(device => {
+            if(!device){
+                var dd = new Device({
+                    token: token,
+                    deviceModel: deviceModel,
+                    os: os,
+                    userId: user._id,
+                    user: user._id,
+                });
+
+                dd.save(dd)
+                .then(data => {
+                    result.status = "success";
+                    result.message = "device data saved";
+                    return res.status(200).send(result);
+                })
+                .catch(err => {
+                    console.log(err);
+                    result.status = "failed";
+                    result.message = "error saving device data";
+                    return res.status(500).send(result);
+                });
+            }else{
+                // device was found, update
+                device.token = token;
+                device.deviceModel = deviceModel;
+                device.os = os;
+                Device.updateOne({_id: device._id}, device)
+                .then(data => {
+                    result.status = "success";
+                    result.message = "device data updated";
+                    return res.status(200).send(result);
+                })
+                .catch(err => {
+                    console.log(err);
+                    result.status = "failed";
+                    result.message = "error updating device data";
+                    return res.status(500).send(result);
+                });
+
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            result.status = "failed";
+            result.message = "error finding device data";
+            return res.status(500).send(result);
+        });
+    })
+    .catch(err => {
+        console.log(err);
+        result.status = "failed";
+        result.message = "error finding user";
+        return res.status(500).send(result);
+    });
+}
+
+
+exports.profileData = (req, res) => {
+    var result = {};
+
+    var userId = req.query.userId;
+
+    // count stores by user
+    Business.countDocuments({userId: userId})
+    .then(numberOfBusiness => {
+        console.log(numberOfBusiness);
+        // count products by user
+        Product.countDocuments({userId: userId})
+        .then(numberOfProducts => {
+            console.log(numberOfProducts);
+            result.status = "success";
+            result.message = "data retrieved";
+            result.numberOfBusiness = numberOfBusiness;
+            result.numberOfProducts = numberOfProducts;
+            return res.status(200).send(result);
+        })
+        .catch(err => {
+            console.log(err);
+            result.status = "failed";
+            result.message = "error occurred counting products";
+            return res.status(500).send(result);
+        });
+    })
+    .catch(err => {
+        console.log(err);
+        result.status = "failed";
+        result.message = "error occurred counting stores";
+        return res.status(500).send(result);
+    });
+}
