@@ -429,3 +429,29 @@ exports.getBusinessByPlaza = (req, res) => {
         return res.status(500).send(result);
     });
 }
+
+exports.getBusinessByUser = (req, res) => {
+    var result = {};
+
+    var userId = req.query.userId;
+
+    Business.find({userId: userId})
+        .populate('contacts')
+        .populate('category')
+        .populate('location')
+        .populate('plaza', {name: 1})
+        .then(businesses => {
+            result.status = "success";
+            result.message = "businesses found";
+            result.businesses = businesses;
+            return res.status(200).send(result);
+        })
+        .catch(err => {
+            console.log(err);
+            result.status = "failed";
+            result.message = "error occurred finding businesses by user";
+            return res.status(500).send(result);
+        });  
+}
+
+

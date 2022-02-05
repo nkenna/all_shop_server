@@ -10,6 +10,7 @@ module.exports = app => {
     router.post("/add-contact-to-business", tools.authenticateToken, business.addContactToBusiness);
     router.post("/edit-business-category", tools.authenticateToken, business.editBusinessCategory);
     router.get("/get-business-by-plaza", tools.authenticateToken, business.getBusinessByPlaza);
+    router.get("/get-business-by-user", tools.authenticateToken, business.getBusinessByUser);
       
     app.use('/api/v1/business', router);
         

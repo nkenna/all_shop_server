@@ -14,6 +14,7 @@ module.exports = app => {
     router.post("/make-product-offer", tools.authenticateToken, product.makeProductOffer);
     router.post("/star-unstar-product", tools.authenticateToken, product.starUnstarProduct);
     router.get("/starred-products-by-user", tools.authenticateToken, product.starredProductsByUser);
+    router.get("/get-products-by-user", tools.authenticateToken, product.getProductsByUser);
     //router.post("/make-product-offer", tools.authenticateToken, product.makeProductOffer);
     
       

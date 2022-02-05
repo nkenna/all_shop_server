@@ -503,7 +503,7 @@ exports.editAvatar = (req, res) => {
             return res.status(404).send(result);
         }
 
-        uploadPath = path.join(process.cwd(), '/media/images/avatars/user/' +  avatar.name); //__dirname + '/images/avatars/' + avatar.name;
+        uploadPath = path.join(process.cwd(), '/media/images/avatars/users' +  avatar.name); //__dirname + '/images/avatars/' + avatar.name;
         console.log(avatar.mimetype);
         console.log(process.cwd()); 
 
@@ -529,7 +529,7 @@ exports.editAvatar = (req, res) => {
             }
             
             // we need to rename here   
-            var newPath = path.join(process.cwd(), '/media/images/avatars/user/' + newName);  
+            var newPath = path.join(process.cwd(), '/media/images/avatars/users/' + newName);  
             fs.rename(uploadPath, newPath, function(err) {
                 if (err) {
                     result.status = "failed";

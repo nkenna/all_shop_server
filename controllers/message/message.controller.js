@@ -5,6 +5,7 @@ const Plaza = db.plazas;
 const Business = db.businesses;
 const Category = db.categories;
 const Contact = db.contacts;
+const Product = db.products;
 const Message = db.messages;
 const os = require('os');
 var fs = require('fs');
@@ -100,6 +101,77 @@ exports.deleteMessage = (req, res) => {
         console.log(err);
         result.status = "failed";
         result.message = "error occurred finding message";
+        return res.status(500).send(result);
+    });
+}
+
+exports.createMessage = (req, res) => {
+    var result = {};
+
+    var productId = req.body.productId;
+    var businessId = req.body.businessId;
+    var recieverId = req.body.recieverId;
+    var userId = req.body.userId;
+    var offerMsg = req.body.offerMsg;
+
+    // find user making the offer first first
+    User.findOne({_id: userId})
+    .then(user => {
+        if(!user){
+            result.status = "failed";
+            result.message = "user account not found";
+            return res.status(404).send(result);
+        }
+
+        // find that particular product
+        Product.findOne({_id: productId})
+        .then(product => {
+            if(!product){
+                result.status = "failed";
+                result.message = "product not found";
+                return res.status(404).send(result);
+            }
+
+            // create an offer message
+            var msg = new Message({
+                content: offerMsg,
+                senderId: user._id,
+                recieverId: product.userId,
+                type: "offer",
+                product: product._id,
+                business: product.businessId,
+                plaza: product.plazaId,
+                sender: user._id,
+                reciever: product.userId
+            });
+
+            msg.save(msg)
+            .then(newMsg => {
+                // send email to reciever
+                // send push notification to reciever
+
+                result.status = "success";
+                result.message = "product offer message sent successfully";
+                return res.status(200).send(result);
+            })
+            .catch(err => {
+                console.log(err);
+                result.status = "failed";
+                result.message = "error occurred senting product offer message";
+                return res.status(500).send(result);
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            result.status = "failed";
+            result.message = "error occurred finding product";
+            return res.status(500).send(result);
+        });
+    })
+    .catch(err => {
+        console.log(err);
+        result.status = "failed";
+        result.message = "error occurred finding user";
         return res.status(500).send(result);
     });
 }

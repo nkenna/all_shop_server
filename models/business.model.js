@@ -22,6 +22,9 @@ module.exports = mongoose => {
         sellOnline: {type: Boolean, default: false},
         acceptCash: {type: Boolean, default: false},
         acceptCard: {type: Boolean, default: true},
+        ratingCount: { type: Number, default: 0 },
+        sumRating: { type: Number, default: 0.0 },
+        avgRating: { type: Number, default: 0.0 },
         plazaId: { type: String},
         imageData: {
           type: imageSchema,

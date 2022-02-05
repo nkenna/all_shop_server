@@ -14,7 +14,7 @@ module.exports = app => {
     //router.post("/user-profile-by-email", users.userProfileByEmail);
     router.post("/user-profile-by-id", tools.authenticateToken, users.userProfileById);
     router.post("/edit-profile", users.editProfile);
-    router.post("/edit-profile-avatar", users.editAvatar);
+    router.post("/edit-profile-avatar",  tools.authenticateToken, users.editAvatar);
     router.post("/add-update-device", tools.authenticateToken, users.addUpdateDevice);
     router.get("/user-profie-data", tools.authenticateToken, users.profileData);
     //router.post("/resend-verify-email", users.resendVerification);

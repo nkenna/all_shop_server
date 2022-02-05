@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 
-var filesFolderAvatar = path.join(process.cwd(), 'media/images/avatars');
+var filesFolderAvatar = path.join(process.cwd(), 'media/images/avatars/users');
 var filesFolderPlaza = path.join(process.cwd(), 'media/images/plaza');
 var filesFolderProduct = path.join(process.cwd(), 'media/images/products');
 
@@ -30,7 +30,7 @@ console.log(filesFolderAvatar);
 console.log(filesFolderPlaza);
 console.log(filesFolderProduct);
 
-app.use('/media-avatar', express.static(filesFolderAvatar));
+app.use('/media-avatar-user', express.static(filesFolderAvatar));
 app.use('/media-plaza', express.static(filesFolderPlaza));
 app.use('/media-product', express.static(filesFolderProduct));
 
@@ -55,6 +55,7 @@ db.mongoose
   require("./routes/business.routes")(app);
   require("./routes/product.routes")(app);
   require("./routes/admin.routes")(app);
+  require("./routes/review.routes")(app);
   
 
 

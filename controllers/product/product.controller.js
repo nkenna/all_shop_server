@@ -558,5 +558,29 @@ exports.starredProductsByUser = (req, res) => {
     });
 }
 
+exports.getProductsByUser = (req, res) => {
+    var result = {};
+
+    var userId = req.query.userId;
+    
+    Product.find({userId: userId})
+        .populate('business')
+        .populate('category')
+        .populate('location')
+        .populate('plaza', {name: 1})
+        .then(products => {
+            result.status = "success";
+            result.message = "products found";
+            result.products = products;
+            return res.status(200).send(result);
+        })
+        .catch(err => {
+            console.log(err);
+            result.status = "failed";
+            result.message = "error occurred finding products by plaza";
+            return res.status(500).send(result);
+        });
+}
+
 
 
